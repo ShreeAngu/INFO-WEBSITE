@@ -26,8 +26,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.code === 'auth/popup-closed-by-user') {
+        console.log('Sign in popup closed by user.');
+        return;
+      }
       console.error('Error signing in with Google:', error);
+      alert(`Sign in failed: ${error.message}\n\nIf you are on Vercel, make sure to add your Vercel domain to Firebase Auth > Settings > Authorized Domains.`);
     }
   };
 
