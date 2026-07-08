@@ -65,6 +65,17 @@ export function Todo() {
       <div className="space-y-12">
         {categories.map(category => {
           const categoryTasks = data.tasks.filter(t => t.category === category);
+          
+          categoryTasks.sort((a, b) => {
+            const priorityWeight = { High: 3, Medium: 2, Low: 1 };
+            const priorityDiff = priorityWeight[b.priority] - priorityWeight[a.priority];
+            if (priorityDiff !== 0) return priorityDiff;
+            
+            const dateA = a.date ? new Date(a.date).getTime() : Number.MAX_SAFE_INTEGER;
+            const dateB = b.date ? new Date(b.date).getTime() : Number.MAX_SAFE_INTEGER;
+            return dateA - dateB;
+          });
+
           if (categoryTasks.length === 0 && category !== 'Today') return null;
 
           return (
