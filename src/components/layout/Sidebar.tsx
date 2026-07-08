@@ -54,13 +54,18 @@ export function Sidebar() {
       </nav>
       <div className="mt-auto pt-5 border-t border-white/10 flex flex-col gap-3">
         {user ? (
-          <button
-            onClick={logout}
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all w-full text-left"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Sign Out</span>
-          </button>
+          <div className="flex flex-col px-3 py-2">
+            <span className="text-xs text-white/40 mb-2 truncate" title={user.email || ''}>
+              {user.email}
+            </span>
+            <button
+              onClick={logout}
+              className="flex items-center gap-3 rounded-lg py-2 text-sm font-medium text-white/60 hover:text-white transition-all w-full text-left"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sign Out</span>
+            </button>
+          </div>
         ) : (
           <button
             onClick={signInWithGoogle}

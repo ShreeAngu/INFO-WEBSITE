@@ -93,24 +93,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       // Remove id if it exists since Firestore generates one
       const { id, ...itemData } = item;
       await addDoc(collection(db, key), itemData);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error adding item to ${key}:`, error);
+      alert(`Error saving data: ${error.message}`);
     }
   };
 
   const updateItem = async <K extends keyof Omit<DashboardData, 'about'>>(key: K, id: string, item: any) => {
     try {
       await updateDoc(doc(db, key, id), item);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error updating item in ${key}:`, error);
+      alert(`Error updating data: ${error.message}`);
     }
   };
 
   const deleteItem = async <K extends keyof Omit<DashboardData, 'about'>>(key: K, id: string) => {
     try {
       await deleteDoc(doc(db, key, id));
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error deleting item from ${key}:`, error);
+      alert(`Error deleting data: ${error.message}`);
     }
   };
 
