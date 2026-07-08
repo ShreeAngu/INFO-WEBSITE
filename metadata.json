@@ -1,0 +1,6 @@
+{
+  "name": "Shree Angu Arunachalam Workspace",
+  "description": "Personal workspace for Shree Angu Arunachalam",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

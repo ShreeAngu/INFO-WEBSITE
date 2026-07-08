@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "Project": {
+      "title": "Project",
+      "description": "A project worked on by the user",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "techStack": { "type": "array" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["name", "description", "status"]
+    },
+    "Experiment": {
+      "title": "Experiment",
+      "description": "An experiment conducted by the user",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "goal": { "type": "string" },
+        "whatITried": { "type": "string" },
+        "whyItFailed": { "type": "string" },
+        "lessonsLearned": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["title", "goal", "date"]
+    },
+    "AboutInfo": {
+      "title": "About Info",
+      "description": "About information for the user",
+      "type": "object",
+      "properties": {
+        "bio": { "type": "string" },
+        "currentFocus": { "type": "string" },
+        "goals": { "type": "string" },
+        "interests": { "type": "array" },
+        "favoriteTech": { "type": "array" }
+      }
+    }
+  },
+  "firestore": {
+    "projects": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Stores user projects"
+    },
+    "experiments": {
+      "schema": { "$ref": "#/entities/Experiment" },
+      "description": "Stores user experiments"
+    },
+    "about": {
+      "schema": { "$ref": "#/entities/AboutInfo" },
+      "description": "Stores about info"
+    }
+  }
+}
