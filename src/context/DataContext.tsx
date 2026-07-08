@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { DashboardData, Project, Experiment, JournalEntry, Task, Skill, TimelineEvent, AboutInfo } from '../types';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 
 const defaultAbout: AboutInfo = {
@@ -71,9 +72,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    setupListeners();
+    // Re-establish listeners when auth state changes in case of permission errors
+    const authUnsub = onAuthStateChanged(auth, () => {
+      // Clear previous listeners
+      unsubs.forEach(unsub => unsub());
+      unsubs = [];
+      setupListeners();
+    });
 
     return () => {
+      authUnsub();
       unsubs.forEach(unsub => unsub());
     };
   }, []);
