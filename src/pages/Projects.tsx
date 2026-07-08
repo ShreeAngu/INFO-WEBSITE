@@ -7,11 +7,11 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Input, Textarea, Select } from '../components/ui/Forms';
 import { Project } from '../types';
-import { Github, ExternalLink, Code2 } from 'lucide-react';
+import { Github, ExternalLink, Code2, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export function Projects() {
-  const { data, addItem } = useData();
+  const { data, addItem, deleteItem } = useData();
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Project>>({
@@ -90,17 +90,32 @@ export function Projects() {
                     ))}
                   </div>
 
-                  <div className="pt-4 border-t border-white/10 flex gap-3">
-                    {project.githubUrl && (
-                      <Button variant="ghost" size="sm" className="gap-2 text-xs">
-                        <Github className="h-4 w-4" /> Code
-                      </Button>
-                    )}
-                    {project.liveUrl && (
-                      <Button variant="ghost" size="sm" className="gap-2 text-xs">
-                        <ExternalLink className="h-4 w-4" /> Live Demo
-                      </Button>
-                    )}
+                  <div className="pt-4 border-t border-white/10 flex justify-between gap-3">
+                    <div className="flex gap-3">
+                      {project.githubUrl && (
+                        <Button variant="ghost" size="sm" className="gap-2 text-xs">
+                          <Github className="h-4 w-4" /> Code
+                        </Button>
+                      )}
+                      {project.liveUrl && (
+                        <Button variant="ghost" size="sm" className="gap-2 text-xs">
+                          <ExternalLink className="h-4 w-4" /> Live Demo
+                        </Button>
+                      )}
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-400 hover:text-red-300 hover:bg-red-400/10 p-2"
+                      onClick={() => {
+                        if (confirm('Are you sure you want to delete this project?')) {
+                          deleteItem('projects', project.id);
+                        }
+                      }}
+                      title="Delete Project"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </div>

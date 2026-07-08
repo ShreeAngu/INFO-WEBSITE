@@ -7,11 +7,11 @@ import { Modal } from '../components/ui/Modal';
 import { Input, Textarea } from '../components/ui/Forms';
 import { Experiment } from '../types';
 import { motion } from 'motion/react';
-import { TestTubeDiagonal, AlertTriangle, Lightbulb } from 'lucide-react';
+import { TestTubeDiagonal, AlertTriangle, Lightbulb, Trash2 } from 'lucide-react';
 import { formatDate } from '../lib/utils';
 
 export function Experiments() {
-  const { data, addItem } = useData();
+  const { data, addItem, deleteItem } = useData();
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Experiment>>({
@@ -40,9 +40,9 @@ export function Experiments() {
   return (
     <div className="space-y-8">
       <PageHeader 
-        title="Experiments" 
+        title="Unpublished Projects" 
         description="A research notebook of hypotheses, attempts, and the lessons learned from things that didn't go as planned."
-        actionLabel="New Experiment"
+        actionLabel="New Project"
         onAction={() => setIsAddOpen(true)}
       />
 
@@ -55,7 +55,7 @@ export function Experiments() {
             transition={{ delay: i * 0.1 }}
           >
             <Card className="h-full flex flex-col hover:border-white/20 transition-colors">
-              <div className="p-6 border-b border-white/10 bg-white/5">
+              <div className="p-6 border-b border-white/10 bg-white/5 flex justify-between items-start">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg">
                     <TestTubeDiagonal className="h-5 w-5" />
@@ -65,6 +65,19 @@ export function Experiments() {
                     <p className="text-[11px] text-white/40">{formatDate(exp.date)}</p>
                   </div>
                 </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-red-400 hover:text-red-300 hover:bg-red-400/10 p-2"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to delete this project?')) {
+                      deleteItem('experiments', exp.id);
+                    }
+                  }}
+                  title="Delete Project"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
               
               <div className="p-6 space-y-6 flex-1">
@@ -97,10 +110,10 @@ export function Experiments() {
         ))}
       </div>
 
-      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Log Experiment">
+      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Log Project">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input 
-            label="Experiment Title" 
+            label="Project Title" 
             value={formData.title} 
             onChange={e => setFormData({...formData, title: e.target.value})} 
             required 
@@ -131,7 +144,7 @@ export function Experiments() {
           />
           <div className="pt-4 flex justify-end gap-3">
             <Button type="button" variant="ghost" onClick={() => setIsAddOpen(false)}>Cancel</Button>
-            <Button type="submit">Save Experiment</Button>
+            <Button type="submit">Save Project</Button>
           </div>
         </form>
       </Modal>

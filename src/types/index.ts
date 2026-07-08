@@ -47,6 +47,7 @@ export interface Task {
   priority: TaskPriority;
   status: TaskStatus;
   deadline?: string;
+  date: string;
   progress: number;
   category: 'Today' | 'Tomorrow' | 'This Week' | 'Later';
   notes?: string;

@@ -8,8 +8,10 @@ import { Input, Select } from '../components/ui/Forms';
 import { Skill } from '../types';
 import { motion } from 'motion/react';
 
+import { Trash2 } from 'lucide-react';
+
 export function Skills() {
-  const { data, addItem } = useData();
+  const { data, addItem, deleteItem } = useData();
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Skill>>({
@@ -52,12 +54,12 @@ export function Skills() {
               <h2 className="text-[12px] font-semibold text-white/40 uppercase tracking-[0.05em] mb-6">{category}</h2>
               <div className="space-y-6">
                 {catSkills.map(skill => (
-                  <div key={skill.id}>
-                    <div className="flex justify-between items-end mb-2 text-sm">
+                  <div key={skill.id} className="group relative">
+                    <div className="flex justify-between items-end mb-2 text-sm pr-6">
                       <span className="font-medium text-white/80">{skill.name}</span>
                       <span className="text-[11px] text-white/50">{skill.proficiency}%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden pr-6">
                       <motion.div 
                         initial={{ width: 0 }}
                         whileInView={{ width: `${skill.proficiency}%` }}
@@ -66,6 +68,17 @@ export function Skills() {
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
                       />
                     </div>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete ${skill.name}?`)) {
+                          deleteItem('skills', skill.id);
+                        }
+                      }}
+                      className="absolute right-0 top-1 text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                      title="Delete Skill"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 ))}
               </div>

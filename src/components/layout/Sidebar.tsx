@@ -8,9 +8,9 @@ import { useAuth } from '../../context/AuthContext';
 const navigation = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'Projects', to: '/projects', icon: FolderKanban },
-  { name: 'Experiments', to: '/experiments', icon: FlaskConical },
+  { name: 'Unpublished Projects', to: '/experiments', icon: FlaskConical },
   { name: 'Journal', to: '/journal', icon: BookOpen },
-  { name: 'Productivity', to: '/productivity', icon: CheckSquare },
+  { name: 'To Do', to: '/todo', icon: CheckSquare },
   { name: 'Skills', to: '/skills', icon: Target },
   { name: 'Timeline', to: '/timeline', icon: GitCommit },
   { name: 'About', to: '/about', icon: User },

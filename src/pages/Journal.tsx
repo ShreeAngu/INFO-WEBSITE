@@ -9,10 +9,10 @@ import { JournalEntry } from '../types';
 import { formatDate } from '../lib/utils';
 import { motion } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
-import { BookMarked, Code, BrainCircuit } from 'lucide-react';
+import { BookMarked, Code, BrainCircuit, Trash2 } from 'lucide-react';
 
 export function Journal() {
-  const { data, addItem } = useData();
+  const { data, addItem, deleteItem } = useData();
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const [formData, setFormData] = useState<Partial<JournalEntry>>({
@@ -62,8 +62,23 @@ export function Journal() {
             
             <p className="text-[11px] text-white/30 mb-2">{formatDate(entry.date)}</p>
             
-            <Card className="p-6 md:p-8 hover:border-white/20 transition-colors">
-              <h2 className="text-2xl font-semibold text-white/90 mb-4 tracking-tight">{entry.title}</h2>
+            <Card className="p-6 md:p-8 hover:border-white/20 transition-colors relative group">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-2xl font-semibold text-white/90 tracking-tight">{entry.title}</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-red-400 hover:text-red-300 hover:bg-red-400/10 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to delete this entry?')) {
+                      deleteItem('journal', entry.id);
+                    }
+                  }}
+                  title="Delete Entry"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
               
               <div className="prose prose-invert max-w-none text-[13px] text-white/80 leading-relaxed">
                 <ReactMarkdown>{entry.description}</ReactMarkdown>

@@ -9,7 +9,7 @@ import { AuthProvider } from './context/AuthContext';
 import { Layout } from './components/layout/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Projects } from './pages/Projects';
-import { Productivity } from './pages/Productivity';
+import { Todo } from './pages/Productivity';
 import { Journal } from './pages/Journal';
 import { Experiments } from './pages/Experiments';
 import { Skills } from './pages/Skills';
@@ -27,7 +27,7 @@ export default function App() {
               <Route path="projects" element={<Projects />} />
               <Route path="experiments" element={<Experiments />} />
               <Route path="journal" element={<Journal />} />
-              <Route path="productivity" element={<Productivity />} />
+              <Route path="todo" element={<Todo />} />
               <Route path="skills" element={<Skills />} />
               <Route path="timeline" element={<Timeline />} />
               <Route path="about" element={<About />} />
