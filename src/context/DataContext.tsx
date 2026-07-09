@@ -3,6 +3,7 @@ import { DashboardData, Project, Experiment, JournalEntry, Task, Skill, Timeline
 import { db, auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
+import { useAuth } from './AuthContext';
 
 export enum OperationType {
   CREATE = 'create',
@@ -102,7 +103,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [localData]);
 
   // Check if current user is admin
-  const user = auth.currentUser;
+  const { user } = useAuth();
   const isAdmin = !!(user && ['2403717673821050@cit.edu.in', 'shreeanguarunachalm@gmail.com', 'shreeanguarunachalam@gmail.com'].includes(user.email || ''));
 
   // Utility to combine Firestore lists and Local lists, supporting overrides and deletions
@@ -201,6 +202,71 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       unsubs.forEach(unsub => unsub());
     };
   }, []);
+
+  // Auto-sync local data to Firestore once user becomes authenticated/admin
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const keys: (keyof Omit<DashboardData, 'about'>)[] = ['projects', 'experiments', 'journal', 'tasks', 'skills', 'timeline'];
+    const hasLocalItems = keys.some(key => (localData[key] || []).length > 0) || (localData.about && localData.about.bio);
+
+    if (!hasLocalItems) return;
+
+    const syncLocalData = async () => {
+      let updatedLocalData = { ...localData };
+      let hasChanges = false;
+
+      for (const key of keys) {
+        const localItems = (localData[key] || []) as any[];
+        if (localItems.length === 0) continue;
+
+        const remainingLocalItems = [];
+
+        for (const item of localItems) {
+          try {
+            if (item._deleted) {
+              // Delete from Firestore
+              await deleteDoc(doc(db, key, item.id));
+              hasChanges = true;
+            } else if (item.isLocal) {
+              // Add to Firestore
+              const { id, isLocal, ...itemData } = item;
+              await addDoc(collection(db, key), itemData);
+              hasChanges = true;
+            } else {
+              // It's a local modification of an existing Firestore document
+              const { id, ...itemData } = item;
+              await updateDoc(doc(db, key, id), itemData);
+              hasChanges = true;
+            }
+          } catch (error) {
+            console.error(`Error syncing local item for ${key}:`, error, item);
+            // Keep it in localData to retry later
+            remainingLocalItems.push(item);
+          }
+        }
+
+        updatedLocalData[key] = remainingLocalItems;
+      }
+
+      // Also handle settings/about if it has a local version
+      if (localData.about && localData.about.bio) {
+        try {
+          await setDoc(doc(db, 'settings', 'about'), localData.about);
+          updatedLocalData.about = defaultAbout; // Reset local about
+          hasChanges = true;
+        } catch (error) {
+          console.error("Error syncing local about info:", error);
+        }
+      }
+
+      if (hasChanges) {
+        setLocalData(updatedLocalData);
+      }
+    };
+
+    syncLocalData();
+  }, [isAdmin, localData]);
 
   const updateData = async (key: keyof DashboardData, value: any) => {
     if (key === 'about') {
