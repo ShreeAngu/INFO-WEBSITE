@@ -14,6 +14,7 @@ export interface Project {
   challenges?: string;
   learnings?: string;
   createdAt: string;
+  completedAt?: string;
 }
 
 export interface Experiment {
@@ -21,10 +22,11 @@ export interface Experiment {
   title: string;
   goal: string;
   whatITried: string;
-  whyItFailed: string;
-  lessonsLearned: string;
+  whyItFailed?: string;
+  lessonsLearned?: string;
   futureImprovements?: string;
   date: string;
+  completedAt?: string;
 }
 
 export interface JournalEntry {

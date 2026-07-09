@@ -44,7 +44,12 @@ export function Dashboard() {
   
   const activeStreak = calculateStreak();
 
-  const recentProjects = data.projects.slice(0, 2);
+  const sortedProjects = [...data.projects].sort((a, b) => {
+    const dateA = a.completedAt ? new Date(a.completedAt).getTime() : new Date(a.createdAt).getTime();
+    const dateB = b.completedAt ? new Date(b.completedAt).getTime() : new Date(b.createdAt).getTime();
+    return dateB - dateA;
+  });
+  const recentProjects = sortedProjects.slice(0, 2);
   const recentJournal = data.journal.slice(0, 2);
 
   return (
