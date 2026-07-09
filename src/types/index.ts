@@ -54,6 +54,8 @@ export interface Task {
   category: 'Today' | 'Tomorrow' | 'This Week' | 'Later';
   notes?: string;
   createdAt: string;
+  hasReminder?: boolean;
+  reminderTime?: string;
 }
 
 export interface Skill {
