@@ -25,7 +25,10 @@ export function Todo() {
     progress: 0,
     date: new Date().toISOString().split('T')[0],
     hasReminder: false,
-    reminderTime: '09:00'
+    reminderTime: '09:00',
+    isRecurring: false,
+    recurringDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    completedDays: {}
   });
 
   const categories = ['Today', 'Tomorrow', 'This Week', 'Later'] as const;
@@ -75,7 +78,10 @@ export function Todo() {
       progress: 0,
       date: new Date().toISOString().split('T')[0],
       hasReminder: false,
-      reminderTime: '09:00'
+      reminderTime: '09:00',
+      isRecurring: false,
+      recurringDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      completedDays: {}
     });
     setIsAddOpen(true);
   };
@@ -91,7 +97,10 @@ export function Todo() {
       progress: task.progress,
       date: task.date,
       hasReminder: task.hasReminder || false,
-      reminderTime: task.reminderTime || '09:00'
+      reminderTime: task.reminderTime || '09:00',
+      isRecurring: task.isRecurring || false,
+      recurringDays: task.recurringDays || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      completedDays: task.completedDays || {}
     });
     setIsAddOpen(true);
   };
@@ -100,16 +109,25 @@ export function Todo() {
     e.preventDefault();
     if (!formData.title) return;
 
+    const finalData = { ...formData };
+    if (finalData.isRecurring) {
+      finalData.category = 'Today';
+      finalData.date = new Date().toISOString().split('T')[0];
+      if (!finalData.recurringDays || finalData.recurringDays.length === 0) {
+        finalData.recurringDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      }
+    }
+
     if (editingTask) {
       const { id, createdAt, ...rest } = editingTask;
       updateItem('tasks', editingTask.id, {
         ...rest,
-        ...formData
+        ...finalData
       });
     } else {
       addItem('tasks', {
         id: crypto.randomUUID(),
-        ...formData,
+        ...finalData,
         createdAt: new Date().toISOString()
       } as Task);
     }
@@ -122,6 +140,21 @@ export function Todo() {
     updateItem('tasks', task.id, {
       status: task.status === 'Done' ? 'Todo' : 'Done',
       progress: task.status === 'Done' ? 0 : 100
+    });
+  };
+
+  const toggleRecurringTask = (task: Task) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const completedDays = task.completedDays || {};
+    const isCompletedToday = !!completedDays[todayStr];
+    
+    const newCompletedDays = {
+      ...completedDays,
+      [todayStr]: !isCompletedToday
+    };
+    
+    updateItem('tasks', task.id, {
+      completedDays: newCompletedDays
     });
   };
 
@@ -141,8 +174,145 @@ export function Todo() {
       />
 
       <div className="space-y-12">
+        {/* Repetitive Tasks / Daily Reminders Section */}
+        {data.tasks && data.tasks.some(t => t.isRecurring) && (
+          <div className="space-y-4">
+            <h3 className="text-[12px] font-semibold text-indigo-400 uppercase tracking-[0.05em] flex items-center gap-2">
+              <Bell className="h-4 w-4" /> Daily Reminders & Repetitive Tasks
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {data.tasks.filter(t => t.isRecurring).map(task => {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const isCompletedToday = !!task.completedDays?.[todayStr];
+                
+                const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                const todayIndex = (new Date().getDay() + 6) % 7; 
+                const todayDayName = daysOfWeek[todayIndex];
+                const isActiveToday = task.recurringDays?.includes(todayDayName);
+
+                return (
+                  <motion.div
+                    key={task.id}
+                    layout
+                    className={cn(
+                      "relative flex flex-col justify-between rounded-xl border p-4 transition-all hover:bg-white/[0.04] backdrop-blur-sm",
+                      isCompletedToday 
+                        ? "border-emerald-500/20 bg-emerald-500/[0.01] opacity-60" 
+                        : isActiveToday 
+                          ? "border-indigo-500/20 bg-white/[0.02]" 
+                          : "border-white/5 bg-white/[0.01]"
+                    )}
+                  >
+                    {/* Status Indicator pulse */}
+                    {isActiveToday && !isCompletedToday && (
+                      <div className="absolute right-3 top-3 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className={cn(
+                          "text-[14px] font-medium transition-colors",
+                          isCompletedToday ? "text-white/40 line-through" : "text-white/90"
+                        )}>
+                          {task.title}
+                        </h4>
+                        {task.description && (
+                          <p className="text-[12px] text-white/50 mt-1 line-clamp-2">{task.description}</p>
+                        )}
+                      </div>
+
+                      {/* Active Days indicator */}
+                      <div className="flex gap-1.5 items-center">
+                        {daysOfWeek.map(day => {
+                          const isScheduled = task.recurringDays?.includes(day);
+                          const isToday = day === todayDayName;
+                          return (
+                            <div
+                              key={day}
+                              className={cn(
+                                "text-[10px] h-6 w-6 rounded-full flex items-center justify-center font-semibold border transition-all",
+                                isScheduled 
+                                  ? isToday 
+                                    ? "bg-indigo-600 border-indigo-500 text-white shadow-[0_0_8px_rgba(99,102,241,0.4)]" 
+                                    : "bg-white/10 border-white/10 text-white/80"
+                                  : isToday
+                                    ? "bg-transparent border-white/5 text-white/30"
+                                    : "bg-transparent border-transparent text-white/15"
+                              )}
+                              title={`${day}${isToday ? ' (Today)' : ''}${isScheduled ? ' - Scheduled' : ' - Rest Day'}`}
+                            >
+                              {day.substring(0, 1)}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Action row */}
+                      <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          {task.hasReminder && task.reminderTime ? (
+                            <span className="text-[10px] text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <Bell className="h-3 w-3" /> {task.reminderTime}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-white/30">No daily alarm</span>
+                          )}
+                          {!isActiveToday && (
+                            <span className="text-[10px] text-white/30 bg-white/5 px-2 py-0.5 rounded-full">
+                              Rest Day
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleRecurringTask(task)}
+                            className={cn(
+                              "text-[11px] px-2.5 py-1 rounded-md font-medium transition-all flex items-center gap-1 border",
+                              isCompletedToday
+                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20"
+                            )}
+                          >
+                            {isCompletedToday ? "Done Today" : "Mark Done"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleEditClick(task)}
+                            className="text-white/20 hover:text-white transition-colors p-1"
+                            title="Edit"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm('Are you sure you want to delete this repetitive task?')) {
+                                deleteItem('tasks', task.id);
+                              }
+                            }}
+                            className="text-white/20 hover:text-red-400 transition-colors p-1"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {categories.map(category => {
-          const categoryTasks = data.tasks.filter(t => t.category === category);
+          const categoryTasks = data.tasks.filter(t => t.category === category && !t.isRecurring);
           
           categoryTasks.sort((a, b) => {
             const priorityWeight = { High: 3, Medium: 2, Low: 1 };
@@ -184,11 +354,23 @@ export function Todo() {
                           <p className={cn("text-[14px] font-medium", task.status === 'Done' ? "text-white/40 line-through" : "text-white/90")}>
                             {task.title}
                           </p>
-                          {task.date && (
-                            <span className="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full">
-                              Completed by: {formatDate(task.date)}
-                            </span>
-                          )}
+                          {task.date && (() => {
+                            const selected = new Date(task.date + 'T00:00:00');
+                            const now = new Date();
+                            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                            const isOverdue = selected.getTime() < today.getTime() && task.status !== 'Done';
+                            
+                            return (
+                              <span className={cn(
+                                "text-[10px] px-2 py-0.5 rounded-full font-medium transition-all",
+                                isOverdue 
+                                  ? "text-rose-400 bg-rose-400/10 border border-rose-500/20 animate-pulse" 
+                                  : "text-white/40 bg-white/5"
+                              )}>
+                                {isOverdue ? "Overdue / " : ""}Time to Complete: {formatDate(task.date)}
+                              </span>
+                            );
+                          })()}
                           {task.hasReminder && task.reminderTime && (
                             <span className="text-[10px] text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full flex items-center gap-1" title="Notification scheduled for mobile app">
                               <Bell className="h-3 w-3" /> Mobile Reminder: {task.reminderTime}
@@ -266,36 +448,117 @@ export function Todo() {
             value={formData.description || ''} 
             onChange={e => setFormData({...formData, description: e.target.value})} 
           />
-          <Input 
-            type="date"
-            label="Date of Completion"
-            value={formData.date || ''}
-            onChange={e => handleDateChange(e.target.value)}
-            required
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <Select 
-              label="Category" 
-              options={[
-                {label: 'Today', value: 'Today'},
-                {label: 'Tomorrow', value: 'Tomorrow'},
-                {label: 'This Week', value: 'This Week'},
-                {label: 'Later', value: 'Later'},
-              ]}
-              value={formData.category}
-              onChange={e => setFormData({...formData, category: e.target.value as any})}
-            />
-            <Select 
-              label="Priority" 
-              options={[
-                {label: 'High', value: 'High'},
-                {label: 'Medium', value: 'Medium'},
-                {label: 'Low', value: 'Low'},
-              ]}
-              value={formData.priority}
-              onChange={e => setFormData({...formData, priority: e.target.value as any})}
-            />
+          {/* Task Type Selection */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-zinc-300 block">Task Type</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData(p => ({ ...p, isRecurring: false }))}
+                className={cn(
+                  "py-2 px-3 rounded-lg border text-sm transition-all text-center font-medium",
+                  !formData.isRecurring 
+                    ? "bg-indigo-600/10 border-indigo-500 text-indigo-400" 
+                    : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
+                )}
+              >
+                One-time Task
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(p => ({ ...p, isRecurring: true }))}
+                className={cn(
+                  "py-2 px-3 rounded-lg border text-sm transition-all text-center font-medium",
+                  formData.isRecurring 
+                    ? "bg-indigo-600/10 border-indigo-500 text-indigo-400" 
+                    : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
+                )}
+              >
+                Repetitive Task
+              </button>
+            </div>
           </div>
+
+          {!formData.isRecurring ? (
+            <>
+              <Input 
+                type="date"
+                label="Time to Complete"
+                value={formData.date || ''}
+                onChange={e => handleDateChange(e.target.value)}
+                required
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <Select 
+                  label="Category" 
+                  options={[
+                    {label: 'Today', value: 'Today'},
+                    {label: 'Tomorrow', value: 'Tomorrow'},
+                    {label: 'This Week', value: 'This Week'},
+                    {label: 'Later', value: 'Later'},
+                  ]}
+                  value={formData.category}
+                  onChange={e => setFormData({...formData, category: e.target.value as any})}
+                />
+                <Select 
+                  label="Priority" 
+                  options={[
+                    {label: 'High', value: 'High'},
+                    {label: 'Medium', value: 'Medium'},
+                    {label: 'Low', value: 'Low'},
+                  ]}
+                  value={formData.priority}
+                  onChange={e => setFormData({...formData, priority: e.target.value as any})}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Day selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-300 block">Repeat On</label>
+                <span className="text-xs text-white/40 block -mt-1 mb-2">Select the days of the week this task should repeat.</span>
+                <div className="flex flex-wrap gap-2 justify-between">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
+                    const isSelected = formData.recurringDays?.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          const current = formData.recurringDays || [];
+                          const next = current.includes(day)
+                            ? current.filter(d => d !== day)
+                            : [...current, day];
+                          setFormData(p => ({ ...p, recurringDays: next }));
+                        }}
+                        className={cn(
+                          "h-10 w-10 rounded-full border text-xs transition-all flex items-center justify-center font-semibold",
+                          isSelected
+                            ? "bg-indigo-600/20 border-indigo-500 text-indigo-300 shadow-[0_0_8px_rgba(99,102,241,0.2)]"
+                            : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/60"
+                        )}
+                      >
+                        {day.substring(0, 2)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <Select 
+                  label="Priority" 
+                  options={[
+                    {label: 'High', value: 'High'},
+                    {label: 'Medium', value: 'Medium'},
+                    {label: 'Low', value: 'Low'},
+                  ]}
+                  value={formData.priority}
+                  onChange={e => setFormData({...formData, priority: e.target.value as any})}
+                />
+              </div>
+            </>
+          )}
 
           {/* Mobile Reminder Section */}
           <div className="border-t border-white/10 pt-4 mt-4">

@@ -56,6 +56,9 @@ export interface Task {
   createdAt: string;
   hasReminder?: boolean;
   reminderTime?: string;
+  isRecurring?: boolean;
+  recurringDays?: string[]; // e.g. ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  completedDays?: { [date: string]: boolean };
 }
 
 export interface Skill {
